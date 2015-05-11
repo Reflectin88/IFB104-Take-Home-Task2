@@ -44,7 +44,11 @@ from urllib import urlopen
 from re import findall
 
 # Import PIL, Python Image Libary
-from PIL import Image,ImageTk
+from PIL import Image, ImageTk
+
+import io
+
+import StringIO
 
 counter = 0
 
@@ -53,6 +57,7 @@ def prev_button():
 
     counter = counter - 1
 
+    update_url()
     titletext.config(text=title[counter])
     datetext.config(text=date[counter])
 
@@ -61,10 +66,21 @@ def next_button():
 
     counter = counter + 1
 
+    update_url()
     titletext.config(text=title[counter])
     datetext.config(text=date[counter])
 
+def update_url():
+    global counter
+    global tkimg
 
+    image = img[counter]
+    fd = urlopen(image)
+    image_file = io.BytesIO(fd.read())
+    im = Image.open(image_file)
+    im = im.resize((800,500), Image.ANTIALIAS)
+    tkimg = ImageTk.PhotoImage(im)
+    my_canvas.create_image(400,250, image=tkimg)
 
 # RSS Feed URL, get images and data from
 deviant = urlopen('http://backend.deviantart.com/rss.xml?q=gallery%3Ajohnsonting+sort%3Atime&type=deviation')
@@ -73,7 +89,10 @@ deviant.close()
 
 title = [] # Creating title list
 date = [] # Creating data list
+img_junk = []
 img = [] # Creating url list
+image = ''
+tkimg = ''
 
 for each in findall('<title>(.*)</title>', site_data): # Getting the title for each image from site_data
     title.append(each) # Putting the Title information into the title list
@@ -82,8 +101,12 @@ for each in findall('<pubDate>(.*)</pubDate>', site_data): # Getting the date fo
     date.append(each) # Putting the date information into the date list
 
 for each in findall('<media:content url=(.*)height', site_data): # Getting the image urls from site_data
-    img.append(each) # Putting the url information into the rul list
+    img_junk.append(each) # Putting the url information into the rul list
 
+test = '\n'.join(img_junk)
+
+for each in findall( '"(.*)"', test):
+    img.append(each)
 
 heading = title[0] # Getting the first title from the deviantart page before it is removed from the list
 
@@ -93,8 +116,18 @@ photo_window = Tk() # Create a window
 
 photo_window.title(heading) # Give the window a title
 
+
+image = img[0]
+fd = urlopen(image)
+image_file = io.BytesIO(fd.read())
+im = Image.open(image_file)
+im = im.resize((800,500), Image.ANTIALIAS)
+tkimg = ImageTk.PhotoImage(im)
+
 # Create the canvas where the image will be stored & put it into the grid
-my_canvas = Canvas(photo_window, width=800, height=500, bg='white').grid(row=2, column=1, columnspan=3)
+my_canvas = Canvas(photo_window, width=800, height=500, bg='white')
+my_canvas.create_image(400,250, image=tkimg)
+
 
 # Create the control buttons & put them into the grid
 Button(photo_window, text='<-- Previous', command=prev_button).grid(row=3, column=1)
@@ -103,6 +136,7 @@ Button(photo_window, text='Next -->', command=next_button).grid(row=3, column=3)
 titletext = Label(photo_window, text=title[counter]) # Creating Image Title
 datetext = Label(photo_window, text=date[counter]) # Creating Date Title
 
+my_canvas.grid(row=2, column=1, columnspan=3)
 titletext.grid(row=1, column=2) # Putting titletext into grid
 datetext.grid(row=1, column=3) # Putting datetext into grid
 
