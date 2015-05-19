@@ -1,3 +1,4 @@
+
 # Import the Tkinter functions
 from Tkinter import *
 
@@ -8,55 +9,18 @@ from urllib import urlopen
 from re import findall
 
 # Import PIL, Python Image Libary
-from PIL import Image,ImageTk
+from PIL import Image, ImageTk
 
-import StringIO
+from StringIO import StringIO
 
+author = []
 
-counter = 0
-
-def prev_button():
-    global counter
-
-    counter = counter - 1
-
-    titletext.config(text=title[counter])
-    datetext.config(text=date[counter])
-
-def next_button():
-    global counter
-
-    counter = counter + 1
-
-    titletext.config(text=title[counter])
-    datetext.config(text=date[counter])
-
-
-
-# RSS Feed URL, get images and data from
-deviant = urlopen('http://backend.deviantart.com/rss.xml?q=gallery%3Ajohnsonting+sort%3Atime&type=deviation')
+deviant = urlopen('http://backend.deviantart.com/rss.xml?q=favby%3Ajohnsonting%2F40216396&type=deviation')
 site_data = deviant.read()
 deviant.close()
 
-title = [] # Creating title list
-date = [] # Creating data list
-img_junk = []
-img = [] # Creating url list
+for each in findall('"urn:ebu">([A-Za-z-0-9]+)</', site_data):
+    author.append(each)
 
-for each in findall('<title>(.*)</title>', site_data): # Getting the title for each image from site_data
-    title.append(each) # Putting the Title information into the title list
-
-for each in findall('<pubDate>(.*)</pubDate>', site_data): # Getting the date for each image from site_data
-    date.append(each) # Putting the date information into the date list
-
-for each in findall('<media:content url=(.*)height', site_data): # Getting the image urls from site_data
-    img_junk.append(each) # Putting the url information into the rul list
-
-test = '\n'.join(img_junk)
-
-for each in findall( '"(.*)"', test):
-    img.append(each)
-
-
-for each in img:
-    print "%s" % each
+for each in author:
+    print '%s' % each
